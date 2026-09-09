@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>RS Gestão · Margem v5</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0f1a;--sf:#111827;--cd:#1a2236;--bd:#253049;--ac:#3b82f6;--gn:#10b981;--yl:#f59e0b;--rd:#ef4444;--tx:#e2e8f0;--mt:#64748b;--dm:#334155}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:14px}
+input,select,button{font-family:inherit}
+.hd{background:linear-gradient(135deg,#0f1729,#162036);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.hd h1{font-size:18px;font-weight:800;background:linear-gradient(135deg,#60a5fa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hd .sub{font-size:10px;color:var(--mt);letter-spacing:.1em}
+.hr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hr select,.hr input[type=number]{padding:5px 10px;border-radius:7px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font-size:12px;outline:none}
+.nv{background:var(--sf);display:flex;gap:1px;padding:0 24px;border-bottom:1px solid var(--bd);overflow-x:auto}
+.nv button{padding:11px 16px;font-size:11px;font-weight:500;color:var(--mt);background:0;border:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.nv button.on{color:#f8fafc;border-bottom-color:var(--ac);background:rgba(59,130,246,.06)}
+.mn{padding:20px 24px;max-width:1280px;margin:0 auto}
+.g{display:grid;gap:14px}.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:800px){.g2,.g3{grid-template-columns:1fr}}
+.k{background:var(--cd);border-radius:12px;padding:18px 22px;border:1px solid var(--bd);position:relative;overflow:hidden}
+.k::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+.k.bl::before{background:linear-gradient(90deg,#3b82f6,#06b6d4)}.k.am::before{background:linear-gradient(90deg,#f59e0b,#ef4444)}.k.em::before{background:linear-gradient(90deg,#10b981,#06b6d4)}.k.rs::before{background:linear-gradient(90deg,#ef4444,#f59e0b)}
+.kl{font-size:10px;color:var(--mt);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.kv{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+.ks{font-size:11px;color:var(--mt);margin-top:4px}
+.cc{background:var(--cd);border-radius:12px;padding:18px;border:1px solid var(--bd)}
+.cc h3{font-size:13px;font-weight:600;margin-bottom:14px;color:#f8fafc}
+.bg{display:inline-block;padding:2px 9px;border-radius:16px;font-size:10px;font-weight:600}
+.bg-gn{background:#064e3b;color:#6ee7b7}.bg-yl{background:#78350f;color:#fcd34d}.bg-rd{background:#7f1d1d;color:#fca5a5}.bg-bl{background:#1e3a5f;color:#93c5fd}.bg-gy{background:#1e293b;color:#64748b}
+.cr{background:var(--cd);border-radius:10px;margin-bottom:6px;border:1px solid var(--bd);overflow:hidden}
+.cr.op{border-color:var(--ac)}
+.ch{display:flex;align-items:center;padding:12px 14px;cursor:pointer;gap:10px;flex-wrap:wrap}
+.ch:hover{background:rgba(59,130,246,.03)}
+.cn{font-weight:600;font-size:13px;color:#f8fafc;flex:1;min-width:140px}
+.cn small{font-weight:400;font-size:10px;color:var(--mt);display:block;margin-top:1px}
+.cv{text-align:right;min-width:80px;font-variant-numeric:tabular-nums}
+.cv label{font-size:9px;color:var(--mt);display:block}.cv .vl{font-size:13px;font-weight:600}
+.ep{padding:4px 14px 14px;border-top:1px solid var(--bd);background:rgba(10,15,26,.5)}
+.ft{font-size:10px;font-weight:600;color:var(--mt);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center}
+.fs{display:flex;gap:8px;flex-wrap:wrap}
+.fi{flex:1;min-width:100px}
+.fi label{font-size:10px;color:var(--mt);display:block;margin-bottom:3px;font-weight:500}
+.fw{display:flex;align-items:center;background:var(--sf);border:1px solid var(--bd);border-radius:6px;overflow:hidden}
+.fw:focus-within{border-color:var(--ac)}
+.fw .px{padding:0 6px;font-size:10px;color:var(--mt);background:rgba(37,48,73,.5);border-right:1px solid var(--bd);height:30px;display:flex;align-items:center}
+.fw input,.fw select{width:100%;padding:5px 8px;border:none;background:0;color:var(--tx);font-size:12px;outline:none;font-variant-numeric:tabular-nums}
+.sb{display:flex;gap:12px;padding:12px 14px;background:var(--bg);border-radius:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.si{font-size:11px;color:var(--mt)}.si b{color:var(--tx);font-weight:600}
+.tb{display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+.tb input[type=text]{flex:1;min-width:180px;padding:8px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font-size:12px;outline:none}
+.fb{padding:5px 14px;border-radius:16px;font-size:11px;font-weight:500;border:1px solid var(--bd);background:var(--sf);color:var(--mt);cursor:pointer}
+.fb.on{border-color:var(--ac);background:#1e3a5f;color:#93c5fd}
+.tw{background:var(--cd);border-radius:12px;border:1px solid var(--bd);overflow:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 14px;text-align:left;font-size:10px;font-weight:600;color:var(--mt);letter-spacing:.05em;border-bottom:2px solid var(--bd);background:var(--sf)}
+td{padding:9px 14px;border-bottom:1px solid rgba(37,48,73,.4);font-size:12px}
+th.r,td.r{text-align:right}
+.rk{display:flex;flex-direction:column;gap:5px}
+.ri{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:7px;background:rgba(10,15,26,.4);border:1px solid rgba(37,48,73,.3)}
+.ri .nm{font-size:12px;font-weight:500;color:#f8fafc}.ri .su{font-size:10px;color:var(--mt)}
+.btn{padding:6px 14px;border-radius:7px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid}
+.btn-ac{border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.1);color:#93c5fd}
+.btn-rd{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.1);color:#fca5a5}
+.btn-gn{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.1);color:#6ee7b7}
+.btn-yl{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.1);color:#fcd34d}
+.prof-block{background:var(--sf);border-radius:8px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--bd)}
+.prof-block .prof-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.prof-block .prof-nm{font-size:12px;font-weight:600;color:#93c5fd}
+.modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--cd);border:1px solid var(--bd);border-radius:14px;padding:24px;width:90%;max-width:520px;max-height:85vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:16px}
+.modal .fi{min-width:100%;margin-bottom:10px}
+.modal .btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.rb{height:5px;border-radius:3px;background:var(--bd);overflow:hidden;margin-top:3px}
+.rf{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--ac),var(--gn))}
+.import-box{background:var(--cd);border:2px dashed var(--bd);border-radius:14px;padding:30px;text-align:center;margin-bottom:16px;cursor:pointer}
+.import-box:hover{border-color:var(--ac)}
+.import-log{background:var(--sf);border-radius:8px;padding:14px;font-size:12px;color:var(--mt);max-height:300px;overflow-y:auto;white-space:pre-wrap;font-family:'Inter',sans-serif}
+.import-log .ok{color:#6ee7b7}.import-log .wr{color:#fcd34d}.import-log .er{color:#fca5a5}
+.footer{text-align:center;padding:24px;font-size:10px;color:var(--dm)}
+.tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:600;margin-left:4px;background:rgba(59,130,246,.15);color:#93c5fd}
+.tag-gn{background:rgba(16,185,129,.15);color:#6ee7b7}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div><h1>RS Gestão Empresarial</h1><div class="sub">Gestão de Margem · v5.0</div></div>
+  <div class="hr">
+    <select id="sM"></select><input id="sA" type="number" value="2026" style="width:60px">
+    <span id="sv" style="font-size:10px;color:#4ade80">● Salvo</span>
+    <span id="syncSt" style="font-size:10px;padding:3px 8px;border-radius:12px;background:#1e293b;color:#64748b;cursor:pointer" title="Status da sincronização">⊘ Local</span>
+    <button class="btn btn-yl" id="bkp">📦 Backup</button>
+    <button class="btn btn-ac" id="fbCfg" title="Configurar Firebase">⚙</button>
+  </div>
+</div>
+<div class="nv" id="nv">
+  <button class="on" data-t="dash">📊 Dashboard</button>
+  <button data-t="lanc">📝 Lançamentos</button>
+  <button data-t="cart">🏢 Carteira</button>
+  <button data-t="recb">💰 Recebimentos</button>
+  <button data-t="anlt">👤 Analistas</button>
+  <button data-t="imp">⬆ Importar</button>
+</div>
+<div class="mn" id="ct"></div>
+<div id="mdl"></div>
+<div class="footer">RS Gestão · Associada FDC · v5.0</div>
+<script>
+const MS=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"],MS_S=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const IMP=.05,fmt=v=>v==null||isNaN(v)?"—":v.toLocaleString("pt-BR",{style:"currency",currency:"BRL",minimumFractionDigits:0,maximumFractionDigits:0}),fp=v=>v==null||isNaN(v)||!isFinite(v)?"—":(v*100).toFixed(1)+"%",nn=v=>parseFloat(v)||0;
+const bg=(t,c)=>`<span class="bg bg-${c}">${t}</span>`,mb=v=>{if(v==null||isNaN(v)||!isFinite(v))return bg("—","gy");const p=v*100;return bg(p.toFixed(1)+"%",p>=30?"gn":p>=15?"yl":"rd")};
+
+// Client name aliases for fuzzy matching
+const ALIASES={"thomas jefferson":"thomas jefferson","global web":"globalweb","globalweb":"globalweb","brago distribuidora":"brago","brago":"brago","faenge":"faenge","lh participações":"faenge","farmacotécnica":"farmacotécnica","farmacotecnica":"farmacotécnica","central vidros":"central vidros","ribeiro bastos":"central vidros","central it":"central it","instituto visão":"inst. visão","inst. visão":"inst. visão","inst visão":"inst. visão","dinamo":"dinamo","segmenta":"dinamo","cbmaq":"cbmaq","engertal":"engertal","abrint":"abrint","condor":"condor","benenutri":"benenutri","renata la porta":"renata la porta","inttermedium":"intter","intter":"intter","toscanello":"toscanello","varejão do piso":"varejão do piso","varejao do piso":"varejão do piso","invictus nefro":"serena","serena":"serena","viva oftalmo":"mondevi","mondevi":"mondevi","geroclinica":"geroclínica","geroclínica":"geroclínica","oficina":"oficina","oficina comunicação":"oficina","ferraz":"ferraz consórcios","ferraz administradora":"ferraz consórcios","ferraz consórcios":"ferraz consórcios","pelvica":"pelvic","pelvic":"pelvic","ubec":"ubec","g4f":"g4f paex","g4f paex":"g4f paex","rcs":"rcs","sol":"sol / horus","horus":"sol / horus","sol / horus":"sol / horus","cpd":"cpd","panebras":"panebras","interativa":"interativa","rtk":"rtk","qualificar":"qualificar ti","qualificar ti":"qualificar ti",
+"central embalagens":"central embalagens","faleiros":"faleiros","rede faleiros":"faleiros","santa clara":"faz. santa clara","faz. santa clara":"faz. santa clara","fazenda santa clara":"faz. santa clara","rcn":"grupo rcn","grupo rcn":"grupo rcn","stenio congro":"grupo rcn","santa casa":"santa casa","cruzeiro do sul":"cruzeiro do sul","imbaúba":"imbaúba","imbauba":"imbaúba","labclin":"labclin","novilho precoce":"novilho precoce","real h":"real h","cmr":"real h","sementes bonamigo":"sem. bonamigo","sem. bonamigo":"sem. bonamigo","bonamigo":"sem. bonamigo","simasul":"simasul","plan":"plan engenharia","plan engenharia":"plan engenharia","plan loteamento":"plan engenharia","agro rondinha":"agro rondinha","odontoclinic":"agro rondinha","simasul custom":"simasul custom.","agrisan":"agrisan","fazenda boa sorte":"agrisan","capul":"capul","kinross":"kinross","amhp":"amhp","imv":"inst. visão","unimed dourados":"unimed redes","unimed três lagoas":"unimed redes","unimed tres lagoas":"unimed redes","unimed redes":"unimed redes","mundi locações":"mundi locações","mundi locacoes":"mundi locações","pag poko":"pag poko","pagpoko":"pag poko","sindcarv":"sindcarv","sindicarv":"sindcarv","grupo caioba":"grupo caioba","caiobá":"grupo caioba","caioba":"grupo caioba","dinamo":"dinamo","segmenta":"dinamo","rcs":"rcs","rossi":"rcs"};
+// Entries to SKIP during import (B2C / institutional)
+const SKIP_IMPORT=["pdd","comitê","comite","pós graduação","pos graduacao","pós graduacao","happy","fórum","forum","jornada","aniversário","aniversario","módulo","modulo"];
+
+const INIT_CL=[
+{id:"c1",nome:"Central Embalagens",reg:"MS",prog:"PAEX",prof:"Barone",anl:"Adaldy",seg:"Indústria",mens:21922.25},
+{id:"c2",nome:"Faleiros",reg:"MS",prog:"PAEX",prof:"Magela",anl:"Adaldy",seg:"Serviços",mens:25522.60},
+{id:"c3",nome:"Faz. Santa Clara",reg:"MS",prog:"PAN",prof:"Barone",anl:"Adaldy",seg:"Agro",mens:15000},
+{id:"c4",nome:"Grupo RCN",reg:"MS",prog:"CUSTOM",prof:"Barone",anl:"Adaldy",seg:"Serviços",mens:4624.05},
+{id:"c6",nome:"Santa Casa",reg:"MS",prog:"PAEX",prof:"Barone",anl:"Adaldy",seg:"Saúde",mens:24108.43},
+{id:"c7",nome:"Cruzeiro do Sul",reg:"MS",prog:"PAEX",prof:"Barone",anl:"Bruno",seg:"Educação",mens:25000},
+{id:"c9",nome:"Imbaúba",reg:"MS",prog:"In Company",prof:"Magela",anl:"Bruno",seg:"Agro",mens:6249.28},
+{id:"c10",nome:"Labclin",reg:"MS",prog:"PAN",prof:"A. Vianna",anl:"Bruno",seg:"Saúde",mens:13730.63},
+{id:"c11",nome:"Novilho Precoce",reg:"MS",prog:"PAN",prof:"Leandro Fig.",anl:"Bruno",seg:"Agro",mens:14500},
+{id:"c12",nome:"Real H",reg:"MS",prog:"PAEX",prof:"Leandro Fig.",anl:"Bruno",seg:"Agro",mens:17759.66},
+{id:"c13",nome:"Sem. Bonamigo",reg:"MS",prog:"PAN",prof:"G. Hugget",anl:"Bruno",seg:"Agro",mens:27475.10},
+{id:"c14",nome:"Simasul",reg:"MS",prog:"PAEX",prof:"G. Hugget",anl:"Bruno",seg:"Indústria",mens:26637.57},
+{id:"c54p",nome:"Plan Engenharia",reg:"MS",prog:"PAEX",prof:"Mathias",anl:"Bruno",seg:"Serviços",mens:23000},
+{id:"c56",nome:"Agro Rondinha",reg:"MS",prog:"CUSTOM",prof:"—",anl:"—",seg:"Agro",mens:8236.90},
+{id:"c57",nome:"Simasul Custom.",reg:"MS",prog:"CUSTOM",prof:"G. Hugget",anl:"—",seg:"Indústria",mens:13000},
+{id:"c17",nome:"Agrisan",reg:"NWMG",prog:"PAEX",prof:"Clenio",anl:"Mariana",seg:"Agro",mens:22000},
+{id:"c18",nome:"Central IT",reg:"DF",prog:"PAEX",prof:"R. Barcelos",anl:"Mariana",seg:"Tecnologia",mens:26300},
+{id:"c19",nome:"Central Vidros",reg:"DF",prog:"PAEX",prof:"M. Vidal",anl:"Mariana",seg:"Indústria",mens:18540.28},
+{id:"c20",nome:"CPD",reg:"DF",prog:"PAEX",prof:"Barone",anl:"Mariana",seg:"Serviços",mens:16500},
+{id:"c21",nome:"Faenge",reg:"DF",prog:"PAEX",prof:"Ari Ricardo",anl:"Mariana",seg:"Agro",mens:19725.39},
+{id:"c23",nome:"Fund. Visconde",reg:"DF",prog:"PAN",prof:"A. Martins",anl:"Mariana",seg:"Educação",mens:10000},
+{id:"c24",nome:"Geroclínica",reg:"DF",prog:"PAN",prof:"Mathias",anl:"Mariana",seg:"Saúde",mens:17000},
+{id:"c26",nome:"Mondevi",reg:"DF",prog:"PAN",prof:"Mathias",anl:"Mariana",seg:"Saúde",mens:15409.27},
+{id:"c28",nome:"Serena",reg:"DF",prog:"PAN",prof:"Mathias",anl:"Mariana",seg:"Outros",mens:13989.51},
+{id:"c29",nome:"Toscanello",reg:"DF",prog:"PAN",prof:"M. Vidal",anl:"Mariana",seg:"Indústria",mens:14499.80},
+{id:"c30",nome:"Capul",reg:"NWMG",prog:"PAEX",prof:"Leandro Fig.",anl:"Mayla",seg:"Agro",mens:23400},
+{id:"c31",nome:"CBMAQ",reg:"DF",prog:"PAEX",prof:"Barone",anl:"Mayla",seg:"Varejo",mens:17746.17},
+{id:"c32",nome:"Farmacotécnica",reg:"DF",prog:"PAEX",prof:"Clenio",anl:"Mayla",seg:"Saúde",mens:15499.17},
+{id:"c33",nome:"Globalweb",reg:"DF",prog:"PAEX",prof:"Barone",anl:"Mayla",seg:"Tecnologia",mens:20310.67},
+{id:"c34",nome:"Interativa",reg:"DF",prog:"PAEX",prof:"Clenio",anl:"Mayla",seg:"Serviços",mens:15639.66},
+{id:"c35",nome:"Intter",reg:"DF",prog:"PAN",prof:"M. Vidal",anl:"Mayla",seg:"Serviços",mens:11831.89},
+{id:"c36",nome:"Panebras",reg:"DF",prog:"PAEX",prof:"Clenio",anl:"Mayla",seg:"Indústria",mens:20349.25},
+{id:"c38",nome:"Qualificar TI",reg:"DF",prog:"PAEX",prof:"A. Vianna",anl:"Mayla",seg:"Tecnologia",mens:15000},
+{id:"c39",nome:"Renata La Porta",reg:"DF",prog:"PAN",prof:"M. Vidal",anl:"Mayla",seg:"Serviços",mens:6109.45},
+{id:"c40",nome:"RTK",reg:"DF",prog:"PAEX",prof:"Clenio",anl:"Mayla",seg:"Serviços",mens:1094.32},
+{id:"c41",nome:"Sol / Horus",reg:"DF",prog:"PAEX",prof:"A. Martins",anl:"Mayla",seg:"Tecnologia",mens:10500},
+{id:"c42",nome:"UBEC",reg:"DF",prog:"GE",prof:"—",anl:"Mayla",seg:"Educação",mens:27022.22},
+{id:"c43",nome:"Inst. Visão",reg:"DF",prog:"PAEX",prof:"A. Martins",anl:"Mayla",seg:"Saúde",mens:21000},
+{id:"c44",nome:"AMHP",reg:"DF",prog:"In Company",prof:"Barone",anl:"Stephanie",seg:"Saúde",mens:7981.55},
+{id:"c45",nome:"Benenutri",reg:"DF",prog:"PAN",prof:"Barone",anl:"Stephanie",seg:"Saúde",mens:15277.70},
+{id:"c46",nome:"Brago",reg:"DF",prog:"PAEX",prof:"A. Martins",anl:"Stephanie",seg:"Serviços",mens:21629.14},
+{id:"c47",nome:"Engertal",reg:"DF",prog:"PAEX",prof:"G. Hugget",anl:"Stephanie",seg:"Serviços",mens:17500},
+{id:"c48",nome:"Ferraz Consórcios",reg:"DF",prog:"PAN",prof:"Leandro Fig.",anl:"Stephanie",seg:"Financeiro",mens:10000},
+{id:"c49",nome:"Kinross",reg:"NWMG",prog:"CUSTOM",prof:"—",anl:"Stephanie",seg:"Outros",mens:32228.88},
+{id:"c50",nome:"Oficina",reg:"DF",prog:"PAN",prof:"G. Hugget",anl:"Stephanie",seg:"Serviços",mens:13050},
+{id:"c52",nome:"Varejão do Piso",reg:"DF",prog:"PAN",prof:"Leandro Fig.",anl:"Stephanie",seg:"Varejo",mens:12457.50},
+{id:"c53",nome:"Pelvic",reg:"DF",prog:"PAN",prof:"Mathias",anl:"Stephanie",seg:"Saúde",mens:13350},
+{id:"c54t",nome:"Thomas Jefferson",reg:"DF",prog:"CUSTOM",prof:"Barone",anl:"—",seg:"Educação",mens:22277.46},
+{id:"cG4F",nome:"G4F PAEX",reg:"DF",prog:"PAEX",prof:"—",anl:"—",seg:"Tecnologia",mens:22377.65},
+{id:"cABR",nome:"ABRINT",reg:"DF",prog:"PAEX",prof:"—",anl:"—",seg:"Tecnologia",mens:21000},
+{id:"cCON",nome:"Condor",reg:"DF",prog:"GE",prof:"—",anl:"—",seg:"Outros",mens:59000},
+];
+
+let S={tab:"dash",mes:7,ano:2026,fl:"TODOS",sr:"",so:"margem",eid:null,clients:JSON.parse(JSON.stringify(INIT_CL)),data:{},analistas:{Adaldy:{sal:0,qty:0},Bruno:{sal:0,qty:0},Mariana:{sal:0,qty:0},Mayla:{sal:0,qty:0},Stephanie:{sal:0,qty:0}},receb:{},importLog:[],fbRef:null};
+let CH={};
+const KY=()=>`${S.ano}-${String(S.mes+1).padStart(2,"0")}`;
+
+function matchClient(name){
+  if(!name)return null;
+  const n=name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  // Direct alias match
+  for(const[alias,canonical] of Object.entries(ALIASES)){
+    const na=alias.normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    if(n.includes(na)||na.includes(n)){
+      const can=canonical.toLowerCase();
+      return S.clients.find(c=>c.nome.toLowerCase()===can)||S.clients.find(c=>can.includes(c.nome.toLowerCase()))||null;
+    }
+  }
+  // Fuzzy: direct substring
+  return S.clients.find(c=>{const cn=c.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");return n.includes(cn)||cn.includes(n)})||null;
+}
+
+async function load(){
+  // Try Firebase first
+  if(S.fbRef){return} // Firebase handles its own loading via onValue
+  try{const r=await window.storage.get("rs-m-v5");if(r?.value){const d=JSON.parse(r.value);Object.assign(S,{clients:d.clients||S.clients,data:d.data||{},analistas:d.analistas||S.analistas,receb:d.receb||{}})}}
+  catch{try{const s=localStorage.getItem("rs-m-v5");if(s){const d=JSON.parse(s);Object.assign(S,{clients:d.clients||S.clients,data:d.data||{},analistas:d.analistas||S.analistas,receb:d.receb||{}})}}catch{}}
+}
+let _saveTimer=null;
+async function save(){
+  document.getElementById("sv").textContent="● Salvando...";document.getElementById("sv").style.color="#3b82f6";
+  const o={clients:S.clients,data:S.data,analistas:S.analistas,receb:S.receb};
+  // Firebase sync
+  if(S.fbRef){
+    clearTimeout(_saveTimer);_saveTimer=setTimeout(()=>{
+      S.fbRef.set(o).then(()=>{
+        document.getElementById("sv").textContent="● Sincronizado";document.getElementById("sv").style.color="#4ade80";
+      }).catch(e=>{console.error(e);document.getElementById("sv").textContent="● Erro sync";document.getElementById("sv").style.color="#f87171"});
+    },500);return;
+  }
+  try{await window.storage.set("rs-m-v5",JSON.stringify(o))}catch{try{localStorage.setItem("rs-m-v5",JSON.stringify(o))}catch{}}
+  setTimeout(()=>{document.getElementById("sv").textContent="● Salvo";document.getElementById("sv").style.color="#4ade80"},250);
+}
+
+// === FIREBASE ===
+const FIREBASE_CONFIG={"apiKey":"AIzaSyAf-sDNxUON0Z9zt5KGOa5sqLCmSuuA0oc","authDomain":"margem-rs.firebaseapp.com","databaseURL":"https://margem-rs-default-rtdb.firebaseio.com","projectId":"margem-rs","storageBucket":"margem-rs.firebasestorage.app","messagingSenderId":"281176041666","appId":"1:281176041666:web:43da815058780fd4f1735b"};
+function initFirebase(){
+  try{
+    const config=FIREBASE_CONFIG;
+    if(!firebase.apps.length)firebase.initializeApp(config);
+    const db=firebase.database();
+    S.fbRef=db.ref("rs-margem");
+    S.fbRef.on("value",snap=>{
+      const d=snap.val();
+      if(d){
+        S.clients=d.clients||S.clients;S.data=d.data||{};S.analistas=d.analistas||S.analistas;S.receb=d.receb||{};
+        document.getElementById("sv").textContent="● Sincronizado";document.getElementById("sv").style.color="#4ade80";
+        render();
+      }
+    });
+    document.getElementById("syncSt").innerHTML="🟢 Online";document.getElementById("syncSt").style.color="#4ade80";
+  }catch(e){console.error("Firebase init error:",e);document.getElementById("syncSt").innerHTML="🔴 Offline";document.getElementById("syncSt").style.color="#f87171"}
+}
+function showFbConfig(){
+  const existing=localStorage.getItem("rs-fb-config")||"";
+  const m=document.getElementById("mdl");
+  m.innerHTML=`<div class="modal-bg" id="mbg"><div class="modal"><h3>⚙ Configurar Firebase</h3>
+  <div style="font-size:12px;color:var(--mt);margin-bottom:12px;line-height:1.5">Cole abaixo o objeto <b>firebaseConfig</b> do console do Firebase (Configurações > Seus apps > Web).</div>
+  <div class="fi"><label>Firebase Config (JSON)</label><textarea id="fbInput" rows="8" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font-family:monospace;font-size:11px;resize:vertical">${existing||'{\n  "apiKey": "...",\n  "authDomain": "...",\n  "databaseURL": "https://SEU-PROJETO.firebaseio.com",\n  "projectId": "...",\n  "storageBucket": "...",\n  "messagingSenderId": "...",\n  "appId": "..."\n}'}</textarea></div>
+  <div class="btns" style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+    ${existing?'<button class="btn btn-rd" id="fbDisc">Desconectar</button>':''}
+    <button class="btn btn-rd" id="fbCanc">Cancelar</button>
+    <button class="btn btn-gn" id="fbSave">Conectar</button>
+  </div></div></div>`;
+  document.getElementById("mbg").addEventListener("click",e=>{if(e.target.id==="mbg")m.innerHTML=""});
+  document.getElementById("fbCanc").addEventListener("click",()=>m.innerHTML="");
+  if(document.getElementById("fbDisc"))document.getElementById("fbDisc").addEventListener("click",()=>{
+    localStorage.removeItem("rs-fb-config");if(S.fbRef){S.fbRef.off();S.fbRef=null}
+    document.getElementById("syncSt").innerHTML="⊘ Local";document.getElementById("syncSt").style.color="var(--mt)";
+    m.innerHTML="";alert("Firebase desconectado. Dados permanecem locais.");
+  });
+  document.getElementById("fbSave").addEventListener("click",()=>{
+    let raw=document.getElementById("fbInput").value.trim();
+    // Clean up pasted JS: extract JSON from firebase config
+    raw=raw.replace(/const\s+\w+\s*=\s*/,"").replace(/;$/,"");
+    try{
+      const cfg=JSON.parse(raw);
+      if(!cfg.databaseURL){alert("databaseURL é obrigatório!");return}
+      localStorage.setItem("rs-fb-config",JSON.stringify(cfg));
+      m.innerHTML="";
+      initFirebase();
+      // Push current local data to Firebase
+      if(S.fbRef){
+        const o={clients:S.clients,data:S.data,analistas:S.analistas,receb:S.receb};
+        S.fbRef.set(o).then(()=>alert("Firebase conectado e dados sincronizados!")).catch(e=>alert("Erro: "+e.message));
+      }
+    }catch(e){alert("JSON inválido: "+e.message)}
+  });
+}
+
+function anlCost(a){const d=S.analistas[a];if(!d||!d.sal)return 0;const c=d.qty||S.clients.filter(x=>x.anl===a).length;return c>0?d.sal/c:0}
+function calc(c,md){const m=c.mens;const royPct=md.royPct!=null?nn(md.royPct):30;const impPct=md.impPct!=null?nn(md.impPct):5;const roy=m*royPct/100;const imp=m*impPct/100;const comissao=nn(md.comissao);let cP=0,cL=0;const ps=md.profs||[];ps.forEach(p=>{cP+=nn(p.haQ)*nn(p.haV)+nn(p.htQ)*nn(p.htV);cL+=nn(p.ph)+nn(p.taxi)+nn(p.dAnl)});const cA=anlCost(c.anl),cT=roy+imp+cP+cL+cA+comissao,mrg=m-cT,mP=m>0?mrg/m:0,ok=cP>0||cL>0||ps.length>0||comissao>0;return{roy,imp,royPct,impPct,comissao,cP,cL,cA,cT,mrg,mP,ok,ps}}
+function analyze(){const md=S.data[KY()]||{};const res=S.clients.map(c=>({...c,...calc(c,md[c.id]||{})}));const fl=res.filter(r=>r.ok);const tR=res.reduce((s,r)=>s+r.mens,0);const tC=fl.reduce((s,r)=>s+r.cT,0);const tM=fl.reduce((s,r)=>s+r.mrg,0);const rF=fl.reduce((s,r)=>s+r.mens,0);const mC=rF>0?tM/rF:null;const neg=fl.filter(r=>r.mrg<0);const byR={};res.forEach(r=>{if(!byR[r.reg])byR[r.reg]={rec:0,cst:0,mrg:0,n:0,nf:0};byR[r.reg].rec+=r.mens;byR[r.reg].n++;if(r.ok){byR[r.reg].cst+=r.cT;byR[r.reg].mrg+=r.mrg;byR[r.reg].nf++}});const cb=fl.reduce((a,r)=>({p:a.p+r.cP,l:a.l+r.cL,r:a.r+r.roy,i:a.i+r.imp,an:a.an+r.cA,cm:a.cm+r.comissao}),{p:0,l:0,r:0,i:0,an:0,cm:0});return{res,fl,tR,tC,tM,mC,neg,byR,cb}}
+
+function setV(cid,path,val){const k=KY();if(!S.data[k])S.data[k]={};if(!S.data[k][cid])S.data[k][cid]={royPct:30,impPct:5,comissao:0,profs:[]};if(path==="royPct"||path==="impPct"||path==="comissao"){S.data[k][cid][path]=nn(val)}else{const[pi,f]=path.split(".");const i=parseInt(pi);while(S.data[k][cid].profs.length<=i)S.data[k][cid].profs.push({nm:"",haQ:0,haV:0,htQ:0,htV:0,ph:0,taxi:0,dAnl:0});if(f==="nm")S.data[k][cid].profs[i][f]=val;else S.data[k][cid].profs[i][f]=nn(val)}save();render()}
+function addP(cid){const k=KY();if(!S.data[k])S.data[k]={};if(!S.data[k][cid])S.data[k][cid]={royPct:30,impPct:5,comissao:0,profs:[]};S.data[k][cid].profs.push({nm:"",haQ:0,haV:0,htQ:0,htV:0,ph:0,taxi:0,dAnl:0});save();render()}
+function rmP(cid,i){const k=KY();if(S.data[k]?.[cid]?.profs?.length>1){S.data[k][cid].profs.splice(i,1);save();render()}}
+
+// ===== SMART IMPORT =====
+function parseMACC(wb){
+  const log=[];let imported=0;const k=KY();if(!S.data[k])S.data[k]={};
+  const sheets=wb.SheetNames.filter(s=>s.toLowerCase().includes("df")||s.toLowerCase().includes("ms")||s.toLowerCase().includes("mg"));
+  if(!sheets.length){log.push({t:"er",m:"Nenhuma aba DF/MS encontrada. Verifique o arquivo."});return log}
+  sheets.forEach(sn=>{
+    const ws=wb.Sheets[sn];const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+    // Find header row
+    let hRow=-1;
+    for(let i=0;i<Math.min(10,rows.length);i++){const r=(rows[i]||[]).map(c=>String(c||"").toLowerCase());if(r.some(c=>c.includes("professor"))&&r.some(c=>c.includes("cliente"))){hRow=i;break}}
+    if(hRow<0){log.push({t:"wr",m:`Aba "${sn}": cabeçalho não encontrado`});return}
+    const hdr=rows[hRow].map(c=>String(c||"").toLowerCase());
+    const iProf=hdr.findIndex(h=>h.includes("professor"));
+    const iCli=hdr.findIndex(h=>h.includes("cliente"));
+    const iHA=hdr.findIndex(h=>h.includes("h. aula")||h.includes("h.aula")||(h.includes("hora")&&h.includes("aula")));
+    const iHT=hdr.findIndex(h=>h.includes("h. téc")||h.includes("h.tec")||(h.includes("hora")&&h.includes("téc")));
+    const iVHA=hdr.findIndex(h=>h.includes("valor ha")||h.includes("valor h"));
+    const iVHT=hdr.findIndex(h=>(h.includes("valor ht")||h.includes("valor h"))&&hdr.indexOf(h)>iVHA);
+    const iTotal=hdr.findIndex(h=>h.includes("total"));
+
+    // Group by client
+    const byClient={};
+    for(let i=hRow+1;i<rows.length;i++){
+      const r=rows[i];if(!r||!r[iProf]||!r[iCli])continue;
+      const profNm=String(r[iProf]).trim();
+      const cliNm=String(r[iCli]).trim();
+      if(cliNm.toLowerCase().includes("total")||cliNm.toLowerCase().includes("subtotal"))continue;
+      const cliLow=cliNm.toLowerCase();
+      if(typeof SKIP_IMPORT!=="undefined"&&SKIP_IMPORT.some(sk=>cliLow.includes(sk)))continue;
+      if(cliLow==="(fixo mensal)")continue;
+      const match=matchClient(cliNm);
+      if(!match){log.push({t:"wr",m:`"${cliNm}" (prof. ${profNm}) — cliente não encontrado na carteira`});continue}
+      if(!byClient[match.id])byClient[match.id]={profs:{}};
+      if(!byClient[match.id].profs[profNm])byClient[match.id].profs[profNm]={haQ:0,haV:0,htQ:0,htV:0,total:0};
+      const p=byClient[match.id].profs[profNm];
+      const ha=nn(r[iHA]);const ht=nn(r[iHT]);
+      p.haQ+=ha;p.htQ+=ht;
+      if(iVHA>=0&&r[iVHA])p.haV=nn(r[iVHA]);
+      if(iVHT>=0&&r[iVHT])p.htV=nn(r[iVHT]);
+      if(iTotal>=0)p.total+=nn(r[iTotal]);
+    }
+    // Apply to state
+    for(const[cid,cd] of Object.entries(byClient)){
+      if(!S.data[k][cid])S.data[k][cid]={royalties:0,profs:[]};
+      S.data[k][cid].profs=Object.entries(cd.profs).map(([nm,d])=>({nm,haQ:d.haQ,haV:d.haV,htQ:d.htQ,htV:d.htV,ph:0,taxi:0,dAnl:0}));
+      const cNm=S.clients.find(c=>c.id===cid)?.nome||cid;
+      const nProfs=Object.keys(cd.profs).length;
+      log.push({t:"ok",m:`${cNm}: ${nProfs} professor(es) importado(s)`});
+      imported++;
+    }
+    log.push({t:"ok",m:`Aba "${sn}": ${imported} clientes processados`});
+  });
+  return log;
+}
+
+function parseReceb(wb){
+  const log=[];const k=KY();if(!S.receb[k])S.receb[k]={};
+  const b2bSheets=wb.SheetNames.filter(sn=>sn&&sn.toLowerCase().includes("b2b"));
+  if(!b2bSheets.length){log.push({t:"er",m:"Nenhuma aba B2B encontrada. Abas: "+wb.SheetNames.join(", ")});return log}
+  log.push({t:"ok",m:`Abas B2B: ${b2bSheets.join(", ")}`});
+  b2bSheets.forEach(sn=>{
+    try{
+    const ws=wb.Sheets[sn];if(!ws){log.push({t:"wr",m:`Aba "${sn}": vazia`});return}
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,dateNF:'dd/mm/yyyy'});
+    let found=0,hRow=-1,iEmp=-1,iMens=-1,iPag=-1;
+    for(let i=0;i<Math.min(10,rows.length);i++){
+      const r=rows[i];if(!r||!Array.isArray(r))continue;
+      const cells=[];for(let j=0;j<r.length;j++)cells.push(String(r[j]!=null?r[j]:"").toLowerCase().trim());
+      const eIdx=cells.findIndex(c=>c&&(c.includes("empresa")||c.includes("cliente")));
+      const mIdx=cells.findIndex(c=>c&&c.includes("mensalidade"));
+      if(eIdx>=0&&mIdx>=0){hRow=i;iEmp=eIdx;iMens=mIdx;
+        iPag=cells.findIndex(c=>c&&c.includes("pagamento"));break}
+    }
+    if(hRow<0){log.push({t:"wr",m:`Aba "${sn}": cabeçalho não encontrado (precisa "Empresas"+"Mensalidade")`});return}
+    log.push({t:"ok",m:`Aba "${sn}": Mensalidade=col ${String.fromCharCode(65+iMens)}${iPag>=0?", Pagamento=col "+String.fromCharCode(65+iPag):""}`});
+    for(let i=hRow+1;i<rows.length;i++){
+      const r=rows[i];if(!r||!Array.isArray(r))continue;
+      const empresa=String(r[iEmp]!=null?r[iEmp]:"").trim();
+      if(empresa.length<3)continue;
+      const low=empresa.toLowerCase();
+      if(low.includes("total")||low.includes("pagamento")||low.includes("recebido")||low.includes("inadimp")||low.includes("contrato")||low.includes("nf "))continue;
+      const match=matchClient(empresa);
+      if(!match)continue;
+      const rawM=r[iMens];if(rawM==null||rawM==="")continue;
+      let mens=0;
+      if(typeof rawM==="number")mens=Math.abs(rawM);
+      else{const s=String(rawM).replace(/[R$\s.]/g,"").replace(",",".");mens=Math.abs(parseFloat(s))||0}
+      if(mens<10)continue;
+      let paid=false;
+      if(iPag>=0){const pv=r[iPag]!=null?String(r[iPag]).trim():"";if(pv.length>0&&pv!=="0")paid=true}
+      if(!S.receb[k][match.id])S.receb[k][match.id]={ar:0,rc:0};
+      S.receb[k][match.id].ar+=mens;if(paid)S.receb[k][match.id].rc+=mens;found++;
+    }
+    log.push({t:"ok",m:`Aba "${sn}": ${found} lançamentos`});
+    }catch(err){log.push({t:"er",m:`Aba "${sn}": erro - ${err.message}`})}
+  });
+  const tAR=Object.values(S.receb[k]).reduce((s,r)=>s+nn(r.ar),0);
+  const tRC=Object.values(S.receb[k]).reduce((s,r)=>s+nn(r.rc),0);
+  log.push({t:"ok",m:`✓ Total B2B: ${fmt(tAR)} a receber, ${fmt(tRC)} recebido`});
+  return log;
+}
+
+function parseLogistica(wb){
+  const log=[];const k=KY();if(!S.data[k])S.data[k]={};
+  // Find the month tab - match by month name or index
+  const mesNomes=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  const mesTarget=mesNomes[S.mes];
+  let tabName=wb.SheetNames.find(s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(mesTarget.normalize("NFD").replace(/[\u0300-\u036f]/g,"")));
+  if(!tabName)tabName=wb.SheetNames.find(s=>s.toLowerCase().includes(MS_S[S.mes].toLowerCase()));
+  if(!tabName){log.push({t:"er",m:`Aba "${MS[S.mes]}" não encontrada. Abas: ${wb.SheetNames.join(", ")}`});return log}
+  log.push({t:"ok",m:`Lendo aba "${tabName}"...`});
+  const ws=wb.Sheets[tabName];const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+  // Parse blocks: Header → Flights → Hotel → Roteiro → Empresas
+  let i=0,blocks=[];
+  while(i<rows.length){
+    const r=rows[i];
+    // Detect header row: col A contains "Professor" (case insensitive)
+    if(r&&r[0]&&String(r[0]).trim().toLowerCase().replace(/\s/g,"").includes("professor")&&String(r[2]||"").toLowerCase().includes("companhia")){
+      // Next row should have professor name
+      i++;if(i>=rows.length)break;
+      const profRow=rows[i];
+      const profName=String(profRow[0]||"").trim();
+      if(!profName||profName.toLowerCase().includes("professor")){i++;continue}
+      // Collect flights until Roteiro
+      let flights=[],hotelVal=0,hotelName="";
+      // First row may have hotel too (cols P=15, Q=16)
+      if(profRow[15])hotelName=String(profRow[15]).trim();
+      if(profRow[16]&&typeof profRow[16]==="number")hotelVal+=profRow[16];
+      // Flight on first row
+      const status0=String(profRow[11]||"").trim().toUpperCase();
+      if(profRow[13]&&typeof profRow[13]==="number"&&!status0.includes("CANCEL")){
+        flights.push({val:profRow[13],status:status0});
+      }
+      i++;
+      // Read more flight/hotel rows until Roteiro or next header
+      while(i<rows.length){
+        const fr=rows[i];
+        if(!fr){i++;continue}
+        const a=String(fr[0]||"").trim().toLowerCase();
+        if(a.includes("roteiro"))break;
+        if(a.includes("professor")&&String(fr[2]||"").toLowerCase().includes("companhia"))break;
+        // Flight row?
+        const fStatus=String(fr[11]||"").trim().toUpperCase();
+        if(fr[13]&&typeof fr[13]==="number"&&!fStatus.includes("CANCEL")){
+          flights.push({val:fr[13],status:fStatus});
+        }
+        // Hotel in this row?
+        if(fr[15]&&!hotelName)hotelName=String(fr[15]).trim();
+        if(fr[16]&&typeof fr[16]==="number")hotelVal+=fr[16];
+        i++;
+      }
+      // Now read Roteiro - collect ALL companies in this trip
+      let empresas=[];
+      if(i<rows.length&&String(rows[i]?.[0]||"").toLowerCase().includes("roteiro")){
+        i++; // skip roteiro header
+        while(i<rows.length){
+          const rr=rows[i];
+          if(!rr){i++;break} // truly empty row = end of block
+          const colA=String(rr[0]||"").trim();
+          const colD=String(rr[3]||"").trim();
+          // Next professor block?
+          if(colA.toLowerCase().replace(/\s/g,"").includes("professor")&&String(rr[2]||"").toLowerCase().includes("companhia"))break;
+          // All cells empty?
+          const hasAny=rr.some(c=>c!=null&&String(c).trim()!=="");
+          if(!hasAny){i++;break}
+          // Extract companies from col D (may have newlines)
+          if(colD&&colD.length>2){
+            colD.split(/\n|\r/).map(l=>l.trim()).filter(l=>l.length>2).forEach(line=>{
+              const empMatch=line.match(/^(.+?)\s*-\s*/);
+              const empName=empMatch?empMatch[1].trim():line.split("-")[0].trim();
+              const empLow=(empName||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+              if(empName&&!SKIP_IMPORT.some(sk=>empLow.includes(sk))&&!empLow.includes("viagem")&&!empLow.includes("rs gest")){
+                const matched=matchClient(empName);
+                if(matched&&!empresas.find(e=>e.id===matched.id)){
+                  empresas.push({id:matched.id,nome:matched.nome});
+                }else if(!matched){
+                  log.push({t:"wr",m:`"${empName}" (roteiro ${profName}) — não encontrado`});
+                }
+              }
+            });
+          }
+          i++;
+        }
+      }
+      const totalPassagens=flights.reduce((s,f)=>s+f.val,0);
+      const totalLog=totalPassagens+hotelVal;
+      if(empresas.length>0&&totalLog>0){
+        const nEmpresas=empresas.length;
+        const perEmpresa=Math.round(totalLog/nEmpresas*100)/100;
+        log.push({t:"ok",m:`${profName}: ${fmt(totalPassagens)} passagens${hotelVal?" + "+fmt(hotelVal)+" hotel":""} = ${fmt(totalLog)} ÷ ${nEmpresas} empresa${nEmpresas>1?"s":""} = ${fmt(perEmpresa)}/cada`});
+        empresas.forEach(emp=>{
+          if(!S.data[k][emp.id])S.data[k][emp.id]={royPct:30,impPct:5,profs:[]};
+          // Find existing prof entry by first name match
+          const profFirst=profName.split(" ")[0].toLowerCase();
+          let pIdx=S.data[k][emp.id].profs.findIndex(p=>p.nm&&p.nm.toLowerCase().includes(profFirst));
+          if(pIdx<0){pIdx=S.data[k][emp.id].profs.length;S.data[k][emp.id].profs.push({nm:profName,haQ:0,haV:0,htQ:0,htV:0,ph:0,taxi:0,dAnl:0})}
+          const prevPh=nn(S.data[k][emp.id].profs[pIdx].ph);
+          S.data[k][emp.id].profs[pIdx].ph=Math.round((prevPh+perEmpresa)*100)/100;
+          log.push({t:"ok",m:`  → ${emp.nome}: ${prevPh>0?fmt(prevPh)+" + ":""}${fmt(perEmpresa)}${prevPh>0?" = "+fmt(prevPh+perEmpresa):""}`});
+        });
+        blocks.push({prof:profName,empresas:nEmpresas,total:totalLog});
+      }else if(totalLog>0&&empresas.length===0){
+        log.push({t:"wr",m:`${profName}: ${fmt(totalLog)} — sem empresa no roteiro (evento institucional)`});
+      }
+      continue;
+    }
+    i++;
+  }
+  log.push({t:"ok",m:`✓ ${blocks.length} blocos processados`});
+  return log;
+}
+
+function handleImport(file){
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:"array"});
+      const names=wb.SheetNames.map(s=>s.toLowerCase());
+      let log=[],type="";
+      // Detect file type - order matters!
+      // Logistics: has "Modelo" + month-name tabs (Janeiro, Fevereiro...)
+      // Recebimentos: has tabs starting with "B2B" (B2B- DF, B2B- MS, etc.)
+      // MAAC: has "Resumo" tab (executive summary of professor hours)
+      const hasModelo=names.some(s=>s==="modelo"||s==="calculos");
+      const hasMonths=names.filter(s=>["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"].some(m=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(m))).length>=3;
+      const hasB2B=names.some(s=>s.includes("b2b"));
+      const hasResumo=names.some(s=>s==="resumo");
+
+      if(hasModelo&&hasMonths){
+        type="LOG";log.push({t:"ok",m:"✈ Tipo detectado: Planilha de Logística de Professores"});
+        log=log.concat(parseLogistica(wb));
+      }else if(hasB2B){
+        type="RECEB";log.push({t:"ok",m:"💰 Tipo detectado: Planilha de Recebimentos"});
+        log=log.concat(parseReceb(wb));
+      }else if(hasResumo){
+        type="MAAC";log.push({t:"ok",m:"📋 Tipo detectado: Relatório de Horas MAAC"});
+        log=log.concat(parseMACC(wb));
+      }else{
+        type="AUTO";log.push({t:"wr",m:"Tipo não identificado. Tentando detecção automática..."});
+        const maacLog=parseMACC(wb);
+        if(maacLog.filter(l=>l.t==="ok").length>1)log=log.concat(maacLog);
+        else{const logLog=parseLogistica(wb);if(logLog.filter(l=>l.t==="ok").length>1)log=log.concat(logLog);else log=log.concat(parseReceb(wb))}
+      }
+      S.importLog=log;save();render();
+    }catch(err){S.importLog=[{t:"er",m:"Erro ao processar: "+err.message}];render()}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function render(){Object.values(CH).forEach(c=>{try{c.destroy()}catch{}});CH={};const el=document.getElementById("ct");
+if(S.tab==="dash")rDash(el);else if(S.tab==="lanc")rLanc(el);else if(S.tab==="cart")rCart(el);else if(S.tab==="recb")rRecb(el);else if(S.tab==="anlt")rAnlt(el);else if(S.tab==="imp")rImp(el);}
+
+function rDash(el){const a=analyze();el.innerHTML=`<div class="g g4" style="margin-bottom:16px">
+<div class="k bl"><div class="kl">Receita Mensal</div><div class="kv" style="color:#60a5fa">${fmt(a.tR)}</div><div class="ks">${S.clients.length} clientes ativos</div></div>
+<div class="k am"><div class="kl">Custo Total</div><div class="kv" style="color:#fbbf24">${a.fl.length?fmt(a.tC):"—"}</div><div class="ks">${a.fl.length} com dados</div></div>
+<div class="k em"><div class="kl">Margem Consolidada</div><div class="kv" style="color:${a.mC!=null?(a.mC>=.15?'#34d399':'#f87171'):'var(--mt)'}">${a.mC!=null?fp(a.mC):"—"}</div><div class="ks">${a.fl.length?fmt(a.tM):'Importe dados na aba ⬆ Importar'}</div></div>
+<div class="k rs"><div class="kl">Alertas</div><div class="kv" style="color:${a.neg.length?'#f87171':'#34d399'}">${a.neg.length}</div><div class="ks">margem negativa</div></div></div>
+<div class="g g2" style="margin-bottom:16px"><div class="cc"><h3>Receita × Custo por Região</h3><canvas id="cR" height="200"></canvas></div><div class="cc"><h3>Composição do Custo</h3><canvas id="cP" height="200"></canvas></div></div>
+${a.fl.length?`<div class="g g2"><div class="cc"><h3 style="color:#34d399">✦ Maiores Margens</h3><div class="rk">${[...a.fl].sort((x,y)=>y.mP-x.mP).slice(0,6).map(c=>`<div class="ri"><div><div class="nm">${c.nome}</div><div class="su">${c.reg} · ${fmt(c.mrg)}</div></div>${mb(c.mP)}</div>`).join("")}</div></div><div class="cc"><h3 style="color:#f87171">⚠ Menores Margens</h3><div class="rk">${[...a.fl].sort((x,y)=>x.mP-y.mP).slice(0,6).map(c=>`<div class="ri"><div><div class="nm">${c.nome}</div><div class="su">${c.reg} · ${fmt(c.mrg)}</div></div>${mb(c.mP)}</div>`).join("")}</div></div></div>`:'<div class="cc" style="text-align:center;padding:36px;color:var(--mt)">Importe o relatório MAAC na aba <b>⬆ Importar</b> para preencher automaticamente.</div>'}`;
+const rgs=Object.entries(a.byR);if(rgs.length)CH.r=new Chart(document.getElementById("cR"),{type:"bar",data:{labels:rgs.map(([r])=>r),datasets:[{label:"Receita",data:rgs.map(([,d])=>d.rec),backgroundColor:"#3b82f6",borderRadius:5},{label:"Custo",data:rgs.map(([,d])=>d.cst),backgroundColor:"#f59e0b",borderRadius:5},{label:"Margem",data:rgs.map(([,d])=>d.mrg),backgroundColor:"#10b981",borderRadius:5}]},options:{responsive:true,plugins:{legend:{labels:{color:"#94a3b8",font:{size:10}}}},scales:{x:{ticks:{color:"#94a3b8"}},y:{ticks:{color:"#94a3b8",callback:v=>fmt(v)},grid:{color:"rgba(37,48,73,.4)"}}}}});
+if(a.fl.length){const pd=[{l:"Professores",v:a.cb.p},{l:"Royalties",v:a.cb.r},{l:"Logística",v:a.cb.l},{l:"Impostos",v:a.cb.i},{l:"Analista",v:a.cb.an},{l:"Comissão",v:a.cb.cm}].filter(d=>d.v>0);if(pd.length)CH.p=new Chart(document.getElementById("cP"),{type:"doughnut",data:{labels:pd.map(d=>d.l),datasets:[{data:pd.map(d=>d.v),backgroundColor:["#3b82f6","#f59e0b","#ef4444","#8b5cf6","#06b6d4","#f472b6"],borderWidth:0}]},options:{responsive:true,cutout:"60%",plugins:{legend:{position:"bottom",labels:{color:"#94a3b8",font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${fmt(ctx.raw)}`}}}}})}}
+
+function rLanc(el){const md=S.data[KY()]||{};let ls=S.clients.filter(c=>S.fl==="TODOS"||c.reg===S.fl);if(S.sr){const s=S.sr.toLowerCase();ls=ls.filter(c=>c.nome.toLowerCase().includes(s)||c.anl.toLowerCase().includes(s))}ls=ls.map(c=>({...c,...calc(c,md[c.id]||{})}));if(S.so==="margem")ls.sort((a,b)=>a.mP-b.mP);else if(S.so==="nome")ls.sort((a,b)=>a.nome.localeCompare(b.nome));else if(S.so==="receita")ls.sort((a,b)=>b.mens-a.mens);else if(S.so==="custo")ls.sort((a,b)=>b.cT-a.cT);
+el.innerHTML=`<div class="tb"><input type="text" id="si" placeholder="Buscar cliente ou analista..." value="${S.sr}">${["TODOS","DF","MS","NWMG"].map(r=>`<button class="fb${S.fl===r?' on':''}" data-fl="${r}">${r}</button>`).join("")}<select class="fb" id="srt" style="padding:5px 10px"><option value="margem"${S.so==="margem"?" selected":""}>↑ Margem</option><option value="nome"${S.so==="nome"?" selected":""}>A→Z</option><option value="receita"${S.so==="receita"?" selected":""}>↓ Receita</option><option value="custo"${S.so==="custo"?" selected":""}>↓ Custo</option></select></div>
+<div style="font-size:11px;color:var(--mt);margin-bottom:12px">${ls.length} clientes · ${MS[S.mes]} ${S.ano}</div>
+<div id="cl">${ls.map(c=>{const d=md[c.id]||{};const op=S.eid===c.id;const profs=d.profs||[];const hasData=profs.length>0;
+return`<div class="cr${op?' op':''}" data-id="${c.id}"><div class="ch" data-cid="${c.id}"><span class="aw" style="font-size:10px;color:var(--dm)">▶</span><div class="cn">${c.nome}${hasData?'<span class="tag tag-gn">'+profs.length+' prof</span>':''}<small>${c.prof} · ${c.anl}</small></div>${bg(c.reg,"bl")}<div class="cv"><label>Receita</label><div class="vl">${fmt(c.mens)}</div></div><div class="cv"><label>Custo</label><div class="vl" style="color:${c.ok?'#fbbf24':'var(--dm)'}">${c.ok?fmt(c.cT):"—"}</div></div><div class="cv"><label>Margem</label><div class="vl" style="color:${c.ok?(c.mrg>=0?'#34d399':'#f87171'):'var(--dm)'}">${c.ok?fmt(c.mrg):"—"}</div></div>${mb(c.ok?c.mP:null)}</div>
+${op?`<div class="ep"><div class="fg"><div class="ft">Royalties, Impostos e Comissão</div><div class="fs"><div class="fi"><label>Royalties %</label><div class="fw"><span class="px">%</span><input type="number" value="${d.royPct!=null?d.royPct:30}" data-cid="${c.id}" data-p="royPct" step="1"></div></div><div class="fi"><label style="color:var(--dm)">= ${fmt(c.roy)}</label></div><div class="fi"><label>Impostos %</label><div class="fw"><span class="px">%</span><input type="number" value="${d.impPct!=null?d.impPct:5}" data-cid="${c.id}" data-p="impPct" step="0.5"></div></div><div class="fi"><label style="color:var(--dm)">= ${fmt(c.imp)}</label></div><div class="fi"><label>Comissão</label><div class="fw"><span class="px">R$</span><input type="number" value="${nn(d.comissao)||''}" data-cid="${c.id}" data-p="comissao" placeholder="0"></div></div></div></div>
+<div class="fg"><div class="ft">Custo Analista<span style="font-weight:400;font-size:9px;text-transform:none"> ${c.anl!=="—"?c.anl+": "+fmt(anlCost(c.anl))+"/mês":"—"}</span></div></div>
+${(profs.length?profs:([{nm:c.prof,haQ:0,haV:0,htQ:0,htV:0,ph:0,taxi:0,dAnl:0}])).map((p,i)=>`<div class="prof-block"><div class="prof-hd"><span class="prof-nm">${p.nm||"Professor "+(i+1)}</span>${i>0?`<button class="btn btn-rd" style="padding:2px 8px;font-size:10px" onclick="rmP('${c.id}',${i})">✕</button>`:''}</div><div class="fs" style="margin-bottom:6px"><div class="fi" style="min-width:160px"><label>Professor</label><div class="fw"><input type="text" value="${p.nm||''}" data-cid="${c.id}" data-p="${i}.nm" placeholder="Nome"></div></div><div class="fi"><label>Qtd HA</label><div class="fw"><span class="px">h</span><input type="number" value="${nn(p.haQ)||''}" data-cid="${c.id}" data-p="${i}.haQ"></div></div><div class="fi"><label>Val/HA</label><div class="fw"><span class="px">R$</span><input type="number" value="${nn(p.haV)||''}" data-cid="${c.id}" data-p="${i}.haV"></div></div><div class="fi"><label>Qtd HT</label><div class="fw"><span class="px">h</span><input type="number" value="${nn(p.htQ)||''}" data-cid="${c.id}" data-p="${i}.htQ"></div></div><div class="fi"><label>Val/HT</label><div class="fw"><span class="px">R$</span><input type="number" value="${nn(p.htV)||''}" data-cid="${c.id}" data-p="${i}.htV"></div></div></div><div class="fs"><div class="fi"><label>Passagens+Hotel</label><div class="fw"><span class="px">R$</span><input type="number" value="${nn(p.ph)||''}" data-cid="${c.id}" data-p="${i}.ph"></div></div><div class="fi"><label>Taxi</label><div class="fw"><span class="px">R$</span><input type="number" value="${nn(p.taxi)||''}" data-cid="${c.id}" data-p="${i}.taxi"></div></div><div class="fi"><label>Desloc. Analista</label><div class="fw"><span class="px">R$</span><input type="number" value="${nn(p.dAnl)||''}" data-cid="${c.id}" data-p="${i}.dAnl"></div></div></div></div>`).join("")}
+<button class="btn btn-gn" style="margin-top:4px" onclick="addP('${c.id}')">＋ Adicionar Professor</button>
+<div class="sb"><div class="si">Roy ${c.royPct}% <b>${fmt(c.roy)}</b></div><div class="si">Imp ${c.impPct}% <b>${fmt(c.imp)}</b></div>${c.comissao?`<div class="si">Com <b>${fmt(c.comissao)}</b></div>`:"" }<div class="si">Prof <b>${fmt(c.cP)}</b></div><div class="si">Log <b>${fmt(c.cL)}</b></div><div class="si">Anl <b>${fmt(c.cA)}</b></div><div style="flex:1"></div><div class="si">Total <b style="color:#fbbf24;font-size:14px">${fmt(c.cT)}</b></div><div class="si">Margem <b style="color:${c.mrg>=0?'#34d399':'#f87171'};font-size:14px">${fmt(c.mrg)}</b></div>${mb(c.mP)}</div></div>`:''}</div>`}).join("")}</div>`;
+document.getElementById("si").addEventListener("input",e=>{S.sr=e.target.value;render()});
+document.querySelectorAll("[data-fl]").forEach(b=>b.addEventListener("click",()=>{S.fl=b.dataset.fl;render()}));
+document.getElementById("srt").addEventListener("change",e=>{S.so=e.target.value;render()});
+document.querySelectorAll(".ch[data-cid]").forEach(h=>h.addEventListener("click",()=>{S.eid=S.eid===h.dataset.cid?null:h.dataset.cid;render()}));
+document.querySelectorAll(".ep input").forEach(inp=>{inp.addEventListener("change",()=>setV(inp.dataset.cid,inp.dataset.p,inp.value));inp.addEventListener("click",e=>e.stopPropagation())})}
+
+function rCart(el){let ls=[...S.clients];if(S.fl!=="TODOS")ls=ls.filter(c=>c.reg===S.fl);if(S.sr){const s=S.sr.toLowerCase();ls=ls.filter(c=>c.nome.toLowerCase().includes(s))}ls.sort((a,b)=>a.nome.localeCompare(b.nome));
+el.innerHTML=`<div class="tb"><input type="text" id="si2" placeholder="Buscar..." value="${S.sr}">${["TODOS","DF","MS","NWMG"].map(r=>`<button class="fb${S.fl===r?' on':''}" data-f2="${r}">${r}</button>`).join("")}<button class="btn btn-gn" id="addCl">＋ Novo Cliente</button></div><div style="font-size:11px;color:var(--mt);margin-bottom:10px">${ls.length} clientes na carteira</div><div class="tw"><table><thead><tr><th>#</th><th>Cliente</th><th>Reg.</th><th>Programa</th><th>Professor OT</th><th>Analista</th><th>Seg.</th><th class="r">Mensalidade</th><th></th></tr></thead><tbody>${ls.map((c,i)=>`<tr><td style="color:var(--mt);font-weight:600">${i+1}</td><td style="font-weight:500;color:#f8fafc">${c.nome}</td><td>${bg(c.reg,"bl")}</td><td style="color:var(--mt)">${c.prog}</td><td style="color:var(--mt)">${c.prof}</td><td style="color:var(--mt)">${c.anl}</td><td style="color:var(--mt)">${c.seg}</td><td class="r" style="font-weight:600;font-variant-numeric:tabular-nums">${c.mens>0?fmt(c.mens):'—'}</td><td><button class="btn btn-rd" style="padding:2px 6px;font-size:9px" data-rm="${c.id}">✕</button></td></tr>`).join("")}</tbody></table></div>`;
+document.getElementById("si2").addEventListener("input",e=>{S.sr=e.target.value;render()});document.querySelectorAll("[data-f2]").forEach(b=>b.addEventListener("click",()=>{S.fl=b.dataset.f2;render()}));
+document.getElementById("addCl").addEventListener("click",()=>{const m=document.getElementById("mdl");m.innerHTML=`<div class="modal-bg" id="mbg"><div class="modal"><h3>Novo Cliente</h3><div class="fi"><label>Nome</label><div class="fw"><input type="text" id="nc_n" placeholder="Empresa"></div></div><div class="fs" style="gap:8px"><div class="fi"><label>Região</label><select id="nc_r" class="fw" style="padding:6px;background:var(--sf);color:var(--tx);border:1px solid var(--bd);border-radius:6px;width:100%"><option>DF</option><option>MS</option><option>NWMG</option></select></div><div class="fi"><label>Programa</label><div class="fw"><input type="text" id="nc_p" placeholder="PAEX"></div></div></div><div class="fs" style="gap:8px"><div class="fi"><label>Professor OT</label><div class="fw"><input type="text" id="nc_pr"></div></div><div class="fi"><label>Analista</label><div class="fw"><input type="text" id="nc_a"></div></div></div><div class="fs" style="gap:8px"><div class="fi"><label>Segmento</label><div class="fw"><input type="text" id="nc_s"></div></div><div class="fi"><label>Mensalidade</label><div class="fw"><span class="px">R$</span><input type="number" id="nc_m"></div></div></div><div class="btns"><button class="btn btn-rd" id="mcl">Cancelar</button><button class="btn btn-gn" id="msv">Salvar</button></div></div></div>`;document.getElementById("mbg").addEventListener("click",e=>{if(e.target.id==="mbg")m.innerHTML=""});document.getElementById("mcl").addEventListener("click",()=>m.innerHTML="");document.getElementById("msv").addEventListener("click",()=>{const nm=document.getElementById("nc_n").value.trim();if(!nm)return alert("Nome obrigatório");S.clients.push({id:"c_"+Date.now(),nome:nm,reg:document.getElementById("nc_r").value,prog:document.getElementById("nc_p").value||"—",prof:document.getElementById("nc_pr").value||"—",anl:document.getElementById("nc_a").value||"—",seg:document.getElementById("nc_s").value||"—",mens:nn(document.getElementById("nc_m").value)});save();m.innerHTML="";render()})});
+document.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click",()=>{if(confirm("Remover?")){S.clients=S.clients.filter(c=>c.id!==b.dataset.rm);save();render()}}))}
+
+function rRecb(el){const rk=KY(),rb=S.receb[rk]||{};const tAR=S.clients.reduce((s,c)=>s+nn(rb[c.id]?.ar),0);const tRc=S.clients.reduce((s,c)=>s+nn(rb[c.id]?.rc),0);const pct=tAR>0?tRc/tAR:0;
+el.innerHTML=`<div class="g g3" style="margin-bottom:16px"><div class="k bl"><div class="kl">A Receber — ${MS_S[S.mes]}/${S.ano}</div><div class="kv" style="color:#60a5fa">${fmt(tAR)}</div><div class="ks">Importe via aba ⬆ ou preencha abaixo</div></div><div class="k em"><div class="kl">Recebido</div><div class="kv" style="color:#34d399">${fmt(tRc)}</div><div class="rb"><div class="rf" style="width:${(pct*100).toFixed(0)}%"></div></div><div class="ks">${(pct*100).toFixed(1)}%</div></div><div class="k rs"><div class="kl">Pendente</div><div class="kv" style="color:#f87171">${fmt(tAR-tRc)}</div><div class="ks">${S.clients.filter(c=>rb[c.id]&&nn(rb[c.id].ar)>nn(rb[c.id].rc)).length} clientes</div></div></div>
+<div class="tw"><table><thead><tr><th>#</th><th>Cliente</th><th>Reg.</th><th class="r">A Receber</th><th class="r">Recebido</th><th>Status</th></tr></thead><tbody>${S.clients.sort((a,b)=>a.nome.localeCompare(b.nome)).map((c,i)=>{const r=rb[c.id]||{};const ar=nn(r.ar),rc=nn(r.rc);const st=ar===0?"—":rc>=ar?bg("✓ Pago","gn"):rc>0?bg("Parcial","yl"):bg("Pendente","rd");return`<tr><td style="color:var(--mt)">${i+1}</td><td style="font-weight:500;color:#f8fafc">${c.nome}</td><td>${bg(c.reg,"bl")}</td><td class="r"><div class="fw" style="max-width:120px;margin-left:auto"><span class="px">R$</span><input type="number" value="${ar||''}" data-rc="${c.id}" data-rf="ar" style="text-align:right" placeholder="0"></div></td><td class="r"><div class="fw" style="max-width:120px;margin-left:auto"><span class="px">R$</span><input type="number" value="${rc||''}" data-rc="${c.id}" data-rf="rc" style="text-align:right" placeholder="0"></div></td><td>${st}</td></tr>`}).join("")}</tbody></table></div>`;
+document.querySelectorAll("[data-rc]").forEach(inp=>inp.addEventListener("change",()=>{const rk2=KY();if(!S.receb[rk2])S.receb[rk2]={};if(!S.receb[rk2][inp.dataset.rc])S.receb[rk2][inp.dataset.rc]={ar:0,rc:0};S.receb[rk2][inp.dataset.rc][inp.dataset.rf]=nn(inp.value);save();render()}))}
+
+function rAnlt(el){const anls=Object.keys(S.analistas);el.innerHTML=`<div class="cc" style="margin-bottom:16px"><h3>Custo Mensal dos Analistas</h3><div style="font-size:11px;color:var(--mt);margin-bottom:14px">Informe o salário e a quantidade de empresas acompanhadas. O custo por cliente = salário ÷ nº empresas.</div><div class="g" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">${anls.map(a=>{const autoCnt=S.clients.filter(c=>c.anl===a).length;const manualQty=S.analistas[a]?.qty||0;const usedQty=manualQty||autoCnt;return`<div style="background:var(--sf);border-radius:10px;padding:14px;border:1px solid var(--bd)"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="font-weight:600;color:#f8fafc;font-size:14px">${a}</span><button class="btn btn-rd" style="padding:2px 8px;font-size:9px" data-rmanl="${a}">✕</button></div><div class="fs" style="gap:8px;margin-bottom:8px"><div class="fi"><label>Salário Mensal</label><div class="fw"><span class="px">R$</span><input type="number" value="${nn(S.analistas[a]?.sal)||''}" data-anl="${a}" data-af="sal" placeholder="0"></div></div><div class="fi" style="max-width:120px"><label>Nº Empresas</label><div class="fw"><input type="number" value="${manualQty||''}" data-anl="${a}" data-af="qty" placeholder="${autoCnt}" style="text-align:center" title="Auto: ${autoCnt} empresas na carteira"></div></div></div><div style="font-size:11px;color:var(--mt)">Custo/cliente: <b style="color:#60a5fa">${fmt(anlCost(a))}</b><span style="margin-left:8px;color:var(--dm)">(${usedQty} empresas${!manualQty?" · auto":""})${autoCnt!==usedQty?" · carteira: "+autoCnt:""}</span></div></div>`}).join("")}</div><button class="btn btn-ac" id="addAnl" style="margin-top:12px">＋ Novo Analista</button></div>`;
+document.querySelectorAll("[data-anl]").forEach(inp=>inp.addEventListener("change",()=>{const a=inp.dataset.anl;const f=inp.dataset.af;if(!S.analistas[a])S.analistas[a]={sal:0,qty:0};if(f==="sal")S.analistas[a].sal=nn(inp.value);else if(f==="qty")S.analistas[a].qty=parseInt(inp.value)||0;save();render()}));
+document.querySelectorAll("[data-rmanl]").forEach(b=>b.addEventListener("click",()=>{if(confirm("Remover analista "+b.dataset.rmanl+"?")){delete S.analistas[b.dataset.rmanl];save();render()}}));
+document.getElementById("addAnl").addEventListener("click",()=>{const nm=prompt("Nome:");if(nm){S.analistas[nm]={sal:0,qty:0};save();render()}})}
+
+function rImp(el){
+  el.innerHTML=`<div class="cc" style="margin-bottom:16px"><h3>⬆ Importação Inteligente</h3>
+  <div style="font-size:12px;color:var(--mt);margin-bottom:16px;line-height:1.6">O sistema detecta automaticamente o tipo de planilha e preenche os dados corretos:<br>
+  <b style="color:#93c5fd">📋 Relatório MAAC (.xlsx)</b> → Horas e valores de professores por empresa<br>
+  <b style="color:#fcd34d">✈ Logística de Professores (.xlsx)</b> → Passagens, hotéis e traslados por empresa<br>
+  <b style="color:#6ee7b7">💰 Recebimentos (.xlsx)</b> → Valores a receber e recebidos por cliente<br>
+  Dados importados vão para o mês selecionado: <b style="color:#f8fafc">${MS[S.mes]} ${S.ano}</b></div>
+  <div class="import-box" id="dropZone"><input type="file" id="impFile" accept=".xlsx,.xls" style="display:none">
+  <div style="font-size:36px;margin-bottom:8px">📂</div>
+  <div style="font-size:14px;font-weight:600;color:#f8fafc;margin-bottom:4px">Arraste ou clique para selecionar</div>
+  <div style="font-size:12px;color:var(--mt)">Aceita .xlsx e .xls</div></div></div>
+  ${S.importLog.length?`<div class="cc"><h3>Resultado da Última Importação</h3><div class="import-log">${S.importLog.map(l=>`<div class="${l.t}">${l.t==="ok"?"✓":l.t==="wr"?"⚠":"✕"} ${l.m}</div>`).join("")}</div></div>`:''}`;
+  const dz=document.getElementById("dropZone"),fi=document.getElementById("impFile");
+  dz.addEventListener("click",()=>fi.click());
+  fi.addEventListener("change",e=>{if(e.target.files[0])handleImport(e.target.files[0])});
+  dz.addEventListener("dragover",e=>{e.preventDefault();dz.style.borderColor="var(--ac)"});
+  dz.addEventListener("dragleave",()=>dz.style.borderColor="var(--bd)");
+  dz.addEventListener("drop",e=>{e.preventDefault();dz.style.borderColor="var(--bd)";if(e.dataTransfer.files[0])handleImport(e.dataTransfer.files[0])});
+}
+
+// Backup
+function backup(){const o={clients:S.clients,data:S.data,analistas:S.analistas,receb:S.receb};const b=new Blob([JSON.stringify(o,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`rs_margem_backup_${new Date().toISOString().slice(0,10)}.json`;a.click()}
+
+// Init
+(async function(){const sel=document.getElementById("sM");MS_S.forEach((m,i)=>{const o=document.createElement("option");o.value=i;o.textContent=m;if(i===7)o.selected=true;sel.appendChild(o)});
+sel.addEventListener("change",()=>{S.mes=+sel.value;render()});document.getElementById("sA").addEventListener("change",e=>{S.ano=+e.target.value;render()});
+document.querySelectorAll(".nv button").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".nv button").forEach(x=>x.classList.remove("on"));b.classList.add("on");S.tab=b.dataset.t;S.eid=null;render()}));
+document.getElementById("bkp").addEventListener("click",backup);
+document.getElementById("fbCfg").addEventListener("click",showFbConfig);
+document.getElementById("syncSt").addEventListener("click",showFbConfig);
+await load();initFirebase();render()})();
+</script>
+</body>
+</html>
